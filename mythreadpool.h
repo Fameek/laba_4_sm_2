@@ -8,7 +8,7 @@
 
 
 using namespace std;
-class Th_pool;
+
 class TaskInfo {
 private:
 	
@@ -34,7 +34,7 @@ public:
 
 
 	}
-	friend Th_pool;
+	
 
 };
 
@@ -89,6 +89,7 @@ private:
 				mtx.unlock();
 			}
 			
+
 			if (trriger) {
 				function<void(int)> new_func = tasks[indx_t].funk;
 				new_func(tasks[indx_t].info);
@@ -118,6 +119,7 @@ private:
 				ex = false;
 			}
 		}
+
 	numUsindCPU--;	
 	}
 	
@@ -145,6 +147,8 @@ public:
 			mtx.unlock();
 		}
 	}
+
+
 	void remove_thread() { //+
 
 		bool trriger = false;
@@ -174,6 +178,7 @@ public:
 	//	return inf;
 	//}
 
+
 	TaskInfo add_task_inf(function<void(int)>func, int data) {
 		task_elem r;
 		r.funk = func;
@@ -186,6 +191,7 @@ public:
 
 	}
 
+
 	void add_task(function<void(int)>func, int data) {
 		task_elem r;
 		r.funk = func;
@@ -193,6 +199,7 @@ public:
 		tasks.push_back(r);
 
 	}
+
 
 	void statys() {
 
@@ -216,24 +223,30 @@ public:
 		mtx.unlock();
 	}
 
+
 	void wait_to_complet() {
 		while (1) {
 			int s = exit.size();
 			for (int i = 0; i < s; i++) {
 				exit[i] = false;
 			}
+
 			for (int i = 0; i < Thread_list.size(); i++) {
 				Thread_list[i].join();
 			}
+
 			for (int i = 0; i < s; i++) {
 				exit.pop_back();
 			}
+
 			for (int i = 0; i < s; i++) {
 				Thread_list.pop_back();
 			}
+
 			for (int i = 0; i < s; i++) {
 				activ_th.pop_back();
 			}
+
 			for (int i = 0; i < s; i++) {
 				this->add_thread();
 			}
@@ -246,6 +259,7 @@ public:
 				}
 
 			}
+
 			if (trriger == false) {
 				break;
 			}
