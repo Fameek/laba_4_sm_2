@@ -19,33 +19,39 @@ int main() {
 		Th_pool pool;
 		
 		pool.statys();
-		
+		//стандартное добавление в очередь
 		pool.add_task(foo, 8);
 		pool.add_task(rrr, 1);
-		
 		pool.statys();
+		// добовление новых потоков
 		this_thread::sleep_for(chrono::milliseconds(1000));
 		pool.add_thread();		
 		pool.add_thread();
 		pool.add_thread();
 		this_thread::sleep_for(chrono::milliseconds(100));
 		pool.statys();
-		this_thread::sleep_for(chrono::milliseconds(10));
 		
 		
+		
+		
+		//переполнение очереди задач, потоки выполняют задачу и переходят на новую
+		this_thread::sleep_for(chrono::milliseconds(2000));
+		for (int i = 0; i < 5; i++) {
+			pool.add_task(foo, i);
+		}
 		pool.statys();
 		this_thread::sleep_for(chrono::milliseconds(500));
-		//for (int i = 0; i < 5; i++) {
-		//	pool.add_task(foo, i);
-		//}
 		
-		TaskInfo inf = pool.add_task_inf(foo, 9);
+		
+		pool.remove_thread(); // удаление свободного потока 
+
+
+		//добавление новой задачи, которую можно мониторить 
+		TaskInfo inf = pool.add_task_inf(rrr, 9);
 		this_thread::sleep_for(chrono::milliseconds(500));
 		string info = inf.statys();
 		cout << info << endl;
-
-
-		pool.statys();
+		
 		pool.wait_to_complet(); // это тип перед деструктором вызывается чтоб не выскочил аборт (если это функция идет вечно, значит недождетесь завержения из за бесконечных функцмй что вы засунули в очередь задач)
 	return 0;
 }
