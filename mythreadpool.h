@@ -8,7 +8,35 @@
 
 
 using namespace std;
+class Th_pool;
+class TaskInfo {
+private:
+	
+	int *stat;
 
+public:
+	TaskInfo(int* ss) {
+		stat = ss;
+	}
+	string statys(){
+		string res;
+		if (*stat == 0) {
+			res = "in the queue";
+		}
+		else if (*stat == 1) {
+			res = "performed";
+		}
+		else if (*stat == 2) {
+			res = "completed";
+		}
+		return res;
+
+
+
+	}
+	friend Th_pool;
+
+};
 
 class Th_pool {
 private:
@@ -141,12 +169,29 @@ public:
 		mtx.unlock();
 
 	}
+	//friend TaskInfo add_t() {
+	//	TaskInfo inf(&tasks[tasks.size() - 1].stat);
+	//	return inf;
+	//}
+
+	TaskInfo add_task_inf(function<void(int)>func, int data) {
+		task_elem r;
+		r.funk = func;
+		r.info = data;
+		tasks.push_back(r);
+
+		TaskInfo inf(&tasks[tasks.size() - 1].stat);
+
+		return inf;
+
+	}
 
 	void add_task(function<void(int)>func, int data) {
 		task_elem r;
 		r.funk = func;
 		r.info = data;
 		tasks.push_back(r);
+
 	}
 
 	void statys() {
