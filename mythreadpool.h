@@ -11,30 +11,31 @@ using namespace std;
 
 class TaskInfo {
 private:
+	vector<string>*staty;
+	int stat_el;
 	
-	int *stat;
-
+	
 public:
-	TaskInfo(int* ss) {
-		stat = ss;
+	TaskInfo() {
+
 	}
-	string statys(){
-		string res;
-		if (*stat == 0) {
-			res = "in the queue";
-		}
-		else if (*stat == 1) {
-			res = "performed";
-		}
-		else if (*stat == 2) {
-			res = "completed";
-		}
-		return res;
-
-
-
+	TaskInfo(vector<string>& st, int rr) {
+		
+		staty = &st;
+		stat_el = rr;
 	}
 	
+	
+
+	string statys(){
+		
+		return staty->at(stat_el);
+	}
+	void wait_to_complet() {
+		while (staty->at(stat_el) != "completed") {
+
+		}
+	}
 
 };
 
@@ -49,9 +50,9 @@ private:
 	{
 		function<void(int)> funk;
 		int info;
-		int stat = 0;
+		
 	};
-
+	vector<string>stat;
 	vector<task_elem>tasks;
 	mutex mtx;
 	
@@ -71,11 +72,11 @@ private:
 			
 			for (int i = 0; i < tasks.size(); i++) {
 				mtx.lock();
-				if (tasks[i].stat == 0) {
+				if (stat[i] == "in the queue") {
 					
 					indx_t = i;
 					trriger = true;
-					tasks[i].stat = 1;
+					stat[i] = "performed";
 					for (int j = 0; j < activ_th.size(); j++) {
 						if (Thread_list[j].get_id() == id_th) {
 							activ_th[j] = true;
@@ -93,7 +94,7 @@ private:
 			if (trriger) {
 				function<void(int)> new_func = tasks[indx_t].funk;
 				new_func(tasks[indx_t].info);
-				tasks[indx_t].stat = 2;
+				stat[indx_t] = "completed";
 				mtx.lock();
 				for (int j = 0; j < activ_th.size(); j++) {
 					if (Thread_list[j].get_id() == id_th) {
@@ -104,20 +105,32 @@ private:
 				mtx.unlock();
 			}			
 
+			bool trrr = true;
+			while (trrr) {
+				for (int i = 0; i < tasks.size(); i++){
+					if (stat[i] == "in the queue") {
+						trrr = false;
+					}
+				}
 
+				bool tr = false;
+				for (int i = 0; i < Thread_list.size(); i++) {
+					if (Thread_list[i].get_id() == id_th) {
+						ex = exit[i];
+						tr = true;
+						break;
 
-			bool tr = false;
-			for (int i = 0; i < Thread_list.size(); i++) {
-				if (Thread_list[i].get_id() == id_th) {
-					ex = exit[i];
-					tr = true;
+					}
+				}
+				if (tr == false) {
+					ex = false;
 					break;
-					
+				}
+				if (!ex) {
+					break;
 				}
 			}
-			if (tr == false) {
-				ex = false;
-			}
+
 		}
 
 	numUsindCPU--;	
@@ -140,10 +153,10 @@ public:
 		else {
 			thread new_th(&Th_pool::th_func_using, this);
 			mtx.lock();
-			Thread_list.push_back(move(new_th));
+			exit.push_back(true);
 			activ_th.push_back(false);
 			numUsindCPU++;
-			exit.push_back(true);
+			Thread_list.push_back(move(new_th));
 			mtx.unlock();
 		}
 	}
@@ -183,9 +196,11 @@ public:
 		task_elem r;
 		r.funk = func;
 		r.info = data;
+		stat.push_back("in the queue");
 		tasks.push_back(r);
-
-		TaskInfo inf(&tasks[tasks.size() - 1].stat);
+		int rr = stat.size() - 1;
+		TaskInfo inf(stat,rr);
+		//inf.save_pointer(&stat[stat.size() - 1]);
 
 		return inf;
 
@@ -196,6 +211,7 @@ public:
 		task_elem r;
 		r.funk = func;
 		r.info = data;
+		stat.push_back("in the queue");
 		tasks.push_back(r);
 
 	}
@@ -207,13 +223,13 @@ public:
 		int end = 0;
 		int activ = 0;
 		for (int i = 0; i < tasks.size(); i++) {
-			if (tasks[i].stat == 0) {
+			if (stat[i] == "in the queue") {
 				wait++;
 			}
-			else if (tasks[i].stat == 1) {
+			else if (stat[i] == "performed") {
 				activ++;
 			}
-			else if (tasks[i].stat == 2) {
+			else if (stat[i] == "completed") {
 				end++;
 			}
 		}
@@ -253,7 +269,7 @@ public:
 
 			bool trriger = false;
 			for (int i = 0; i < tasks.size(); i++) {
-				if (tasks[i].stat != 2) {
+				if (stat[i] != "completed") {
 					trriger = true;
 					break;
 				}

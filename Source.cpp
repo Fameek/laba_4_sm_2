@@ -17,41 +17,49 @@ void rrr(int t) {
 int main() {
 	
 		Th_pool pool;
-		
-		pool.statys();
-		//стандартное добавление в очередь
-		pool.add_task(foo, 8);
-		pool.add_task(rrr, 1);
-		pool.statys();
-		// добовление новых потоков
-		this_thread::sleep_for(chrono::milliseconds(1000));
-		pool.add_thread();		
+		//////////////////////////////////
+		vector<TaskInfo> mon;
+		for (int i = 0; i < 10; i++) {
+			mon.push_back(pool.add_task_inf(rrr, 2));
+			mon.push_back(pool.add_task_inf(rrr, 5));
+			
+			pool.statys();
+		}	
 		pool.add_thread();
 		pool.add_thread();
-		this_thread::sleep_for(chrono::milliseconds(100));
-		pool.statys();
-		
-		
-		
-		
-		//переполнение очереди задач, потоки выполняют задачу и переходят на новую
-		this_thread::sleep_for(chrono::milliseconds(2000));
-		for (int i = 0; i < 5; i++) {
-			pool.add_task(foo, i);
+		pool.add_thread();
+		//mon[mon.size()-1].wait_to_complet(); //дождется завершения последней задачи 
+		int is_completed = 0;
+		while (is_completed != mon.size()) {
+			is_completed = 0;
+			int is_queue = 0;
+			int is_perf = 0;
+			for (int i = 0; i < mon.size(); i++) {
+				string stat = mon[i].statys();
+				if (stat == "completed") {
+					is_completed += 1;
+				}
+				else if (stat == "performed") {
+					is_perf += 1;
+
+				}
+				else if (stat == "in the queue") {
+					is_queue += 1;
+				}
+			}
+			this_thread::sleep_for(chrono::milliseconds(500));
+			cout << "comp: " << is_completed << endl;
+			cout << "perf: " << is_perf << endl;
+			cout << "queue: " << is_queue << endl;
+			pool.statys();
+
+
 		}
-		pool.statys();
-		this_thread::sleep_for(chrono::milliseconds(500));
-		
-		
-		pool.remove_thread(); // удаление свободного потока 
+		///////////////////////////////////////////
 
 
-		//добавление новой задачи, которую можно мониторить 
-		TaskInfo inf = pool.add_task_inf(rrr, 9);
-		this_thread::sleep_for(chrono::milliseconds(500));
-		string info = inf.statys();
-		cout << info << endl;
 		
+
 		pool.wait_to_complet(); // это тип перед деструктором вызывается чтоб не выскочил аборт (если это функция идет вечно, значит недождетесь завержения из за бесконечных функцмй что вы засунули в очередь задач)
 	return 0;
 }
