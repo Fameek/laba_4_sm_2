@@ -196,12 +196,13 @@ public:
 		task_elem r;
 		r.funk = func;
 		r.info = data;
+		mtx.lock();
 		stat.push_back("in the queue");
 		tasks.push_back(r);
 		int rr = stat.size() - 1;
 		TaskInfo inf(stat,rr);
 		//inf.save_pointer(&stat[stat.size() - 1]);
-
+		mtx.unlock();
 		return inf;
 
 	}
@@ -211,9 +212,10 @@ public:
 		task_elem r;
 		r.funk = func;
 		r.info = data;
+		mtx.lock();
 		stat.push_back("in the queue");
 		tasks.push_back(r);
-
+		mtx.unlock();
 	}
 
 
@@ -300,6 +302,7 @@ public:
 			}
 			Thread_list[i].join();
 		}
+		mtx.lock();
 		for (int i = 0; i < s; i++) {
 			exit.pop_back();
 		}
@@ -318,7 +321,7 @@ public:
 		for (int i = 0; i < s; i++) {
 			Thread_list.pop_back();
 		}
-		
+		mtx.unlock();
 		
 	}
 
