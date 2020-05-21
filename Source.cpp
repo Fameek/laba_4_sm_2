@@ -28,8 +28,9 @@ int main() {
 				else if (stat == "performed")
 					is_perf += 1;
 				else if (stat == "in the queue")
-					is_queue += 1;
+					is_queue += 1;				
 			}
+			/*cout << "kok\n";*/
 		}
 		cout << "comp: " << is_completed << endl;
 		cout << "perf: " << is_perf << endl;
@@ -37,10 +38,19 @@ int main() {
 		pool.statys();
 		});
 	thr.detach();
-	//this_thread::sleep_for(chrono::milliseconds(5000));
+
+	this_thread::sleep_for(chrono::milliseconds(500));
 	for (int i = 0; i < 10; i++)
+	{
+		
 		mon.push_back(pool.add_task_inf(rrr, 10 + i));
+	}
 	pool.statys();
+	
+	cout << "fff\n";
 	pool.wait_to_complet(); // это тип перед деструктором вызывается чтоб не выскочил аборт (если это функция идет вечно, значит недождетесь завержения из за бесконечных функцмй что вы засунули в очередь задач)
+	//this_thread::sleep_for(chrono::milliseconds(1000));
+	pool.statys();
+	this_thread::sleep_for(chrono::milliseconds(100));
 	return 0;
 }

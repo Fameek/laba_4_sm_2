@@ -11,30 +11,38 @@ using namespace std;
 
 class TaskInfo {
 private:
-	vector<string>*staty;
+	vector<string>&staty;
 	int stat_el;
 	
 	
 public:
-	TaskInfo() {
 
-	}
-	TaskInfo(vector<string>& st, int rr) {
+	TaskInfo(vector<string>& st, int rr):staty(st) {
 		
-		staty = &st;
 		stat_el = rr;
 	}
 	
 	
 
 	string statys(){
-		
-		return staty->at(stat_el);
+		string res;
+		if (&staty == NULL|| staty[stat_el] != "completed" && staty[stat_el] != "in the queue" && staty[stat_el] != "performed") {
+			res = "completed";
+			
+		}
+		else {
+			res = staty[stat_el];
+		}
+
+		return res;
 	}
 	void wait_to_complet() {
-		while (staty->at(stat_el) != "completed") {
+		if (&staty != NULL) {
+			while (staty[stat_el] != "completed") {
 
+			}
 		}
+
 	}
 
 };
@@ -94,7 +102,7 @@ private:
 			if (trriger) {
 				function<void(int)> new_func = tasks[indx_t].funk;
 				new_func(tasks[indx_t].info);
-				stat[indx_t] = "completed";
+				
 				mtx.lock();
 				for (int j = 0; j < activ_th.size(); j++) {
 					if (Thread_list[j].get_id() == id_th) {
@@ -102,6 +110,7 @@ private:
 						break;
 					}
 				}
+				stat[indx_t] = "completed";
 				mtx.unlock();
 			}			
 
@@ -156,8 +165,9 @@ public:
 			exit.push_back(true);
 			activ_th.push_back(false);
 			numUsindCPU++;
-			Thread_list.push_back(move(new_th));
 			mtx.unlock();
+			Thread_list.push_back(move(new_th));
+			
 		}
 	}
 
@@ -224,104 +234,97 @@ public:
 		int wait = 0;
 		int end = 0;
 		int activ = 0;
+		mtx.lock();
 		for (int i = 0; i < tasks.size(); i++) {
 			if (stat[i] == "in the queue") {
-				wait++;
+				wait+=1;
 			}
 			else if (stat[i] == "performed") {
-				activ++;
+				activ+=1;
 			}
 			else if (stat[i] == "completed") {
-				end++;
+				end+=1;
 			}
 		}
 
-		mtx.lock();
+		
 		cout << "wait: " << wait << " | performed: " << activ << " | completed: " << end << endl;
 		mtx.unlock();
 	}
 
 
 	void wait_to_complet() {
-		while (1) {
-			int s = exit.size();
-			for (int i = 0; i < s; i++) {
-				exit[i] = false;
-			}
+		for (int i = 0; i < stat.size(); i++) {
+			while (stat[i] != "completed") {
 
-			for (int i = 0; i < Thread_list.size(); i++) {
-				Thread_list[i].join();
-			}
-
-			for (int i = 0; i < s; i++) {
-				exit.pop_back();
-			}
-
-			for (int i = 0; i < s; i++) {
-				Thread_list.pop_back();
-			}
-
-			for (int i = 0; i < s; i++) {
-				activ_th.pop_back();
-			}
-
-			for (int i = 0; i < s; i++) {
-				this->add_thread();
-			}
-
-			bool trriger = false;
-			for (int i = 0; i < tasks.size(); i++) {
-				if (stat[i] != "completed") {
-					trriger = true;
-					break;
-				}
-
-			}
-
-			if (trriger == false) {
-				break;
 			}
 
 
 		}
+
+
+
+		//while (1) {
+			//int s = exit.size();
+			//for (int i = 0; i < s; i++) {
+			//	exit[i] = false;
+			//}
+
+			//for (int i = 0; i < Thread_list.size(); i++) {
+			//	Thread_list[i].join();
+			//}
+
+			//for (int i = 0; i < s; i++) {
+			//	exit.pop_back();
+			//}
+
+			//for (int i = 0; i < s; i++) {
+			//	Thread_list.pop_back();
+			//}
+
+			//for (int i = 0; i < s; i++) {
+			//	activ_th.pop_back();
+			//}
+
+			//for (int i = 0; i < s; i++) {
+			//	this->add_thread();
+			//}
+
+			//bool trriger = false;
+			//for (int i = 0; i < tasks.size(); i++) {
+			//	if (stat[i] != "completed") {
+			//		trriger = true;
+			//		break;
+			//	}
+
+			//}
+
+			//if (trriger == false) {
+			//	break;
+			//}
+
+
+		//}
 	}
 
 	~Th_pool(){ //+
 		int s = exit.size();
+		
 		for (int i = 0; i < s; i++) {
 			exit[i] = false;
 		}
 
 		for (int i = 0; i < Thread_list.size(); i++) {
 			if (activ_th[i] == true) {
-				mtx.lock();
+				//mtx.lock();
 				cout << "ERROR : you cannot call the destructor if functions in other threads are not completed" << endl;
-				mtx.unlock();
+				//mtx.unlock();
 
 				terminate();
 			}
 			Thread_list[i].join();
 		}
-		mtx.lock();
-		for (int i = 0; i < s; i++) {
-			exit.pop_back();
-		}
-		numfreeCPU = 0;
-		s = tasks.size();
-		for (int i = 0; i < s; i++) {
-			tasks.pop_back();
-		}
-		s = activ_th.size();
-		for (int i = 0; i < s; i++) {
-			activ_th.pop_back();
-		}
-		
-		
-		s = Thread_list.size();
-		for (int i = 0; i < s; i++) {
-			Thread_list.pop_back();
-		}
-		mtx.unlock();
+
 		
 	}
 
